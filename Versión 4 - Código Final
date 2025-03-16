@@ -1,0 +1,105 @@
+% ===================================================
+%    Árbol Genealógico de los Simpson con Listas
+% ===================================================
+%    Programación III - Actividad 5
+%    Integrantes: Nombre1, Nombre2, Nombre3
+% ===================================================
+
+% Lista de todas las personas en la familia
+personas([abraham, herbert, homero, bart, clancy, mona, marge, lisa, maggie, patty, selma, jacqueline, ling]).
+
+% Listas de género
+hombres([abraham, herbert, homero, bart, clancy]).
+mujeres([mona, marge, lisa, maggie, patty, selma, jacqueline, ling]).
+
+% Relaciones padre-hijo y madre-hijo en listas
+padres([
+    [abraham, [herbert, homero]],
+    [clancy, [marge, patty, selma]],
+    [homero, [bart, lisa, maggie]]
+]).
+
+madres([
+    [mona, [herbert, homero]],
+    [jacqueline, [marge, patty, selma]],
+    [marge, [bart, lisa, maggie]],
+    [selma, [ling]]
+]).
+
+% Relaciones de matrimonio usando listas
+esposos([
+    [homero, marge], [abraham, mona]
+]).
+
+% ===================================================
+%       Predicados Auxiliares para Manejo de Listas
+% ===================================================
+
+% Buscar una persona en una lista de relaciones
+buscar(_, [], false). % Si no está en la lista, devuelve falso
+buscar(E, [[E, X] | _], X). % Encuentra la coincidencia
+buscar(E, [_ | T], X) :- buscar(E, T, X). % Sigue buscando en la lista
+
+% Verificar si un elemento está en una lista
+pertenece(X, [X | _]). % Si es el primer elemento, es cierto
+pertenece(X, [_ | T]) :- pertenece(X, T). % Busca en el resto de la lista
+
+% ===================================================
+%       Reglas de Relaciones Familiares
+% ===================================================
+
+% Padre y madre
+padre_de(P, H) :- padres(L), buscar(P, L, Hijos), pertenece(H, Hijos).
+madre_de(M, H) :- madres(L), buscar(M, L, Hijos), pertenece(H, Hijos).
+
+% Abuelo
+abuelo(X, Y) :-
+    padre_de(X, Z), (padre_de(Z, Y); madre_de(Z, Y)).
+
+% Abuela
+abuela(X, Y) :-
+    madre_de(X, Z), (padre_de(Z, Y); madre_de(Z, Y)).
+
+% Hermano
+hermano(X, Y) :-
+    (padre_de(P, X), padre_de(P, Y));
+    (madre_de(M, X), madre_de(M, Y)),
+    X \= Y, hombres(H), pertenece(X, H).
+
+% Hermana
+hermana(X, Y) :-
+    (padre_de(P, X), padre_de(P, Y));
+    (madre_de(M, X), madre_de(M, Y)),
+    X \= Y, mujeres(M), pertenece(X, M).
+
+% Tío
+tio(X, Y) :-
+    hermano(X, P), (padre_de(P, Y); madre_de(P, Y)).
+
+% Tía
+tia(X, Y) :-
+    hermana(X, P), (padre_de(P, Y); madre_de(P, Y)).
+
+% Primos
+primos(X, Y) :-
+    (tio(Z, X); tia(Z, X)), (tio(Z, Y); tia(Z, Y)), X \= Y.
+
+% ===================================================
+%       Consultas de Ejemplo
+% ===================================================
+% ?- abuelo(Abuelo, bart).
+% Abuelo = abraham.
+%
+% ?- abuela(Abuela, lisa).
+% Abuela = mona ; Abuela = jacqueline.
+%
+% ?- hermano(Hermano, bart).
+% Hermano = lisa ; Hermano = maggie.
+%
+% ?- tio(Tio, ling).
+% Tio = homero.
+%
+% ?- primos(P1, P2).
+% P1 = bart, P2 = ling ;
+% P1 = lisa, P2 = ling ;
+% P1 = maggie, P2 = ling.
