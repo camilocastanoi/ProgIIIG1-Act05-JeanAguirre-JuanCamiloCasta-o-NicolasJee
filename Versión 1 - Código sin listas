@@ -1,0 +1,72 @@
+% Árbol genealógico de los Simpson (Versión sin listas)
+
+% Género
+hombre(abraham).
+hombre(herbert).
+hombre(homero).
+hombre(bart).
+hombre(clancy).
+
+mujer(mona).
+mujer(marge).
+mujer(lisa).
+mujer(maggie).
+mujer(patty).
+mujer(selma).
+mujer(jacqueline).
+mujer(ling).
+
+% Relaciones padre-hijo
+padre(abraham, herbert).
+padre(abraham, homero).
+padre(clancy, marge).
+padre(clancy, patty).
+padre(clancy, selma).
+padre(homero, bart).
+padre(homero, lisa).
+padre(homero, maggie).
+
+% Relaciones madre-hijo
+madre(mona, herbert).
+madre(mona, homero).
+madre(jacqueline, marge).
+madre(jacqueline, patty).
+madre(jacqueline, selma).
+madre(marge, bart).
+madre(marge, lisa).
+madre(marge, maggie).
+madre(selma, ling).
+
+% Relaciones de matrimonio
+esposo(homero, marge).
+esposo(abraham, mona).
+
+% Reglas
+
+% Abuelo
+abuelo(X, Y) :- padre(X, Z), padre(Z, Y).
+abuelo(X, Y) :- padre(X, Z), madre(Z, Y).
+
+% Abuela
+abuela(X, Y) :- madre(X, Z), padre(Z, Y).
+abuela(X, Y) :- madre(X, Z), madre(Z, Y).
+
+% Hermano
+hermano(X, Y) :- padre(P, X), padre(P, Y), X \= Y.
+hermano(X, Y) :- madre(M, X), madre(M, Y), X \= Y.
+
+% Hermana
+hermana(X, Y) :- padre(P, X), padre(P, Y), X \= Y, mujer(X).
+hermana(X, Y) :- madre(M, X), madre(M, Y), X \= Y, mujer(X).
+
+% Tío
+tio(X, Y) :- hermano(X, Z), padre(Z, Y).
+tio(X, Y) :- esposo(X, Z), hermana(Z, P), madre(P, Y).
+
+% Tía
+tia(X, Y) :- hermana(X, Z), padre(Z, Y).
+tia(X, Y) :- esposa(X, Z), hermano(Z, P), padre(P, Y).
+
+% Primos
+primos(X, Y) :- tio(Z, X), padre(Z, Y).
+primos(X, Y) :- tia(Z, X), madre(Z, Y).
