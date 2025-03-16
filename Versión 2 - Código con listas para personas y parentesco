@@ -1,75 +1,49 @@
-% Árbol genealógico de los Simpson (Uso de listas)
+% Hechos
 
 % Lista de todas las personas en la familia
-personas([abraham, herbert, homero, bart, clancy, mona, marge, lisa, maggie, patty, selma, jacqueline, ling]).
+personas([abraham, herbert, homero, lisa, bart, maggie, mona, marge, clancy, patty, selma, jacqueline, ling]).
 
-% Listas de género
-hombres([abraham, herbert, homero, bart, clancy]).
-mujeres([mona, marge, lisa, maggie, patty, selma, jacqueline, ling]).
+% Relaciones de paternidad y maternidad usando listas
+padre(abraham, [herbert, homero]).
+padre(homero, [lisa, bart, maggie]).
+padre(clancy, [patty, selma, marge]).
 
-% Relaciones padre-hijo y madre-hijo en listas
-padres([
-    [abraham, herbert], [abraham, homero],
-    [clancy, marge], [clancy, patty], [clancy, selma],
-    [homero, bart], [homero, lisa], [homero, maggie]
-]).
+madre(mona, [herbert, homero]).
+madre(marge, [lisa, bart, maggie]).
+madre(jacqueline, [patty, selma, marge]).
+madre(selma, [ling]).
 
-madres([
-    [mona, herbert], [mona, homero],
-    [jacqueline, marge], [jacqueline, patty], [jacqueline, selma],
-    [marge, bart], [marge, lisa], [marge, maggie],
-    [selma, ling]
-]).
+% Relaciones por matrimonio
+esposos([homero, marge]).
+esposos([abraham, mona]).
 
-% Relaciones de matrimonio usando listas
-esposos([
-    [homero, marge], [abraham, mona]
-]).
-
-% Predicados auxiliares para búsqueda en listas
-buscar(_, [], false). % Si no está en la lista, devuelve falso
-buscar(E, [[E, X] | _], X). % Encuentra la primera coincidencia
-buscar(E, [_ | T], X) :- buscar(E, T, X). % Sigue buscando en la lista
-
-% Reglas actualizadas para trabajar con listas
+% Reglas de relaciones familiares
 
 % Abuelo
 abuelo(X, Y) :-
-    padres(P), buscar(X, P, Z), % X es padre de Z
-    padres(P2), buscar(Z, P2, Y), % Z es padre de Y
-    X \= Y.
+    padre(X, Padres), member(Z, Padres), (padre(Z, Hijos); madre(Z, Hijos)), member(Y, Hijos).
 
 % Abuela
 abuela(X, Y) :-
-    madres(M), buscar(X, M, Z), % X es madre de Z
-    (padre(Z, Y); madre(Z, Y)), % Z es padre o madre de Y
-    X \= Y.
+    madre(X, Padres), member(Z, Padres), (madre(Z, Hijos); padre(Z, Hijos)), member(Y, Hijos).
 
 % Hermano
 hermano(X, Y) :-
-    padres(P), buscar(_, P, Hijos), % Encuentra a los hijos
-    member(X, Hijos), member(Y, Hijos), X \= Y.
+    (padre(_, Hijos); madre(_, Hijos)), member(X, Hijos), member(Y, Hijos), X \= Y.
 
 % Hermana
 hermana(X, Y) :-
-    padres(P), buscar(_, P, Hijos), % Encuentra a los hijos
-    member(X, Hijos), member(Y, Hijos), X \= Y,
-    mujeres(M), member(X, M).
+    (padre(_, Hijos); madre(_, Hijos)), member(X, Hijos), member(Y, Hijos), X \= Y.
 
 % Tío
 tio(X, Y) :-
-    hermano(X, Z),
-    padres(P), buscar(Z, P, Hijos), % Encuentra a los hijos
-    member(Y, Hijos), X \= Y.
+    (hermano(X, Z); esposos(X, Z)), (padre(Z, Hijos); madre(Z, Hijos)), member(Y, Hijos).
 
 % Tía
 tia(X, Y) :-
-    hermana(X, Z),
-    padres(P), buscar(Z, P, Hijos), % Encuentra a los hijos
-    member(Y, Hijos), X \= Y.
+    (hermana(X, Z); esposos(X, Z)), (padre(Z, Hijos); madre(Z, Hijos)), member(Y, Hijos).
 
 % Primos
 primos(X, Y) :-
-    (tio(Z, X); tia(Z, X)),
-    (tio(Z, Y); tia(Z, Y)),
-    X \= Y.
+    (tio(Z, X); tia(Z, X)), (tio(Z, Y); tia(Z, Y)), X \= Y.
+
