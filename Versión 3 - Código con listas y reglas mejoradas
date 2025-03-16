@@ -1,0 +1,74 @@
+% Árbol genealógico de los Simpson con listas optimizadas
+
+% Lista de todas las personas en la familia
+personas([abraham, herbert, homero, bart, clancy, mona, marge, lisa, maggie, patty, selma, jacqueline, ling]).
+
+% Listas de género
+hombres([abraham, herbert, homero, bart, clancy]).
+mujeres([mona, marge, lisa, maggie, patty, selma, jacqueline, ling]).
+
+% Relaciones padre-hijo y madre-hijo en listas
+padres([
+    [abraham, [herbert, homero]],
+    [clancy, [marge, patty, selma]],
+    [homero, [bart, lisa, maggie]]
+]).
+
+madres([
+    [mona, [herbert, homero]],
+    [jacqueline, [marge, patty, selma]],
+    [marge, [bart, lisa, maggie]],
+    [selma, [ling]]
+]).
+
+% Relaciones de matrimonio usando listas
+esposos([
+    [homero, marge], [abraham, mona]
+]).
+
+% Predicado para buscar en listas de relaciones
+buscar(_, [], false). % Si no está en la lista, devuelve falso
+buscar(E, [[E, X] | _], X). % Encuentra la coincidencia
+buscar(E, [_ | T], X) :- buscar(E, T, X). % Sigue buscando en la lista
+
+% Predicado para verificar si un elemento está en una lista
+pertenece(X, [X | _]). % Si es el primer elemento, es cierto
+pertenece(X, [_ | T]) :- pertenece(X, T). % Busca en el resto de la lista
+
+% Reglas optimizadas
+
+% Padre y madre
+padre_de(P, H) :- padres(L), buscar(P, L, Hijos), pertenece(H, Hijos).
+madre_de(M, H) :- madres(L), buscar(M, L, Hijos), pertenece(H, Hijos).
+
+% Abuelo
+abuelo(X, Y) :-
+    padre_de(X, Z), (padre_de(Z, Y); madre_de(Z, Y)).
+
+% Abuela
+abuela(X, Y) :-
+    madre_de(X, Z), (padre_de(Z, Y); madre_de(Z, Y)).
+
+% Hermano
+hermano(X, Y) :-
+    (padre_de(P, X), padre_de(P, Y));
+    (madre_de(M, X), madre_de(M, Y)),
+    X \= Y, hombres(H), pertenece(X, H).
+
+% Hermana
+hermana(X, Y) :-
+    (padre_de(P, X), padre_de(P, Y));
+    (madre_de(M, X), madre_de(M, Y)),
+    X \= Y, mujeres(Muj), pertenece(X, Muj).
+
+% Tío
+tio(X, Y) :-
+    hermano(X, P), (padre_de(P, Y); madre_de(P, Y)).
+
+% Tía
+tia(X, Y) :-
+    hermana(X, P), (padre_de(P, Y); madre_de(P, Y)).
+
+% Primos
+primos(X, Y) :-
+    (tio(Z, X); tia(Z, X)), (tio(Z, Y); tia(Z, Y)), X \= Y.
